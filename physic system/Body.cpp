@@ -1,10 +1,10 @@
 #include "Body.h"
 #include <iostream>
 
-Body::Body(const Shape& shape,int index,float x, float y, float mass)
+Body::Body(const Shape& shape,float x, float y, float mass)
 {
 	this->shape = shape.Clone();
-	this->shape->bodyindex = index;
+	
 	//linear motion
 	this->position = Vec2f(x, y);
 	this->velocity = Vec2f(0, 0);
@@ -47,37 +47,6 @@ Body::~Body()
 	std::cout << "body destroyed!" << std::endl;
 }
 
-void Body::integrateLinear(float deltatime)
-{
-	if (movementstatic)
-	{
-		return;
-	}
-
-	acceleration = sumForces * invMass;
-	
-	velocity += acceleration * deltatime;
-
-	position += velocity * deltatime;
-
-	ClearForces();
-}
-
-void Body::integrateAngular(float deltatime)
-{
-	if (rotationstatic)
-	{
-		return;
-	}
-
-	angularacceleration = sumTorque * invInertia;
-
-	angularvelocity += angularacceleration * deltatime;
-
-	rotation += angularvelocity * deltatime;
-
-	ClearTorgue();
-}
 
 void Body::AddForce(const Vec2f& force)
 {
@@ -107,14 +76,37 @@ bool Body::IsStatic() const
 	return result;
 }
 
-void Body::ApplyImpulse(const Vec2f& j)
+Vec2f Body::LocalSpaceToWorldSpace(const Vec2f& point) const
+{
+	Vec2f rotated = point.Rotate(rotation);
+	return rotated + position;
+}
+
+Vec2f Body::WorldSpaceToLocalSpace(const Vec2f& point) const
+{
+	float translatedX = point.x - position.x;
+	float translatedY = point.y - position.y;
+	float rotatedX = cos(-rotation) * translatedX - sin(-rotation) * translatedY;
+	float rotatedY = cos(-rotation) * translatedY + sin(-rotation) * translatedX;
+
+	return Vec2f(rotatedX, rotatedY);
+}
+
+void Body::ApplyImpulseAngular(const float j)
+{
+	if (rotationstatic) return;
+
+	angularvelocity += j * invInertia;
+}
+
+void Body::ApplyImpulseLinear(const Vec2f& j)
 {
 	if (movementstatic) return;
 
 	velocity += j * invMass;
 }
 
-void Body::ApplyImpulse(const Vec2f& j, const Vec2f& r)
+void Body::ApplyImpulseAtPoint(const Vec2f& j, const Vec2f& r)
 {
 	if (movementstatic || rotationstatic) return;
 
@@ -128,16 +120,48 @@ void Body::SetTexture(const char* textureFileName)
 	decal = new olc::Decal(sprite);
 }
 
-void Body::Update(float deltatime, int index)
+void Body::IntegrateForces(const float dt)
 {
-	integrateLinear(deltatime);
-	integrateAngular(deltatime);
-	bool isPolygon = shape->GetType() == POLYGON || shape->GetType() == BOX;
-
-	if (isPolygon)
+	
+	if (!movementstatic)
 	{
-		PolygonShape* polygonshape = (PolygonShape*)shape;
-		
-		polygonshape->UpdateVertices(rotation, position, index);
+		acceleration = sumForces * invMass;
+		velocity += acceleration * dt;
 	}
+	else
+	{
+		return;
+	}
+
+	if (!rotationstatic)
+	{
+		angularacceleration = sumTorque * invInertia;
+		angularvelocity += angularacceleration * dt;
+	}
+	else
+	{
+		return;
+	}
+
+	ClearForces();
+	ClearTorgue();
+
 }
+
+void Body::IntegrateVelocities(const float dt)
+{
+	
+	if (!movementstatic)
+		position += velocity * dt;
+	else
+		return;
+
+	if (!rotationstatic)
+		rotation += angularvelocity * dt;
+	else
+		return;
+
+
+	shape->UpdateVertices(rotation, position);
+}
+

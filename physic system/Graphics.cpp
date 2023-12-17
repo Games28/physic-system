@@ -201,4 +201,37 @@ Vec2f Graphics::GetQuadCenterPoint(std::array<Vec2f, 4>& vertices)
 	return UpperLeft + (LowerRight - UpperLeft) / 2.0;
 }
 
+void Graphics::DraweWireFrameModel(olc::PixelGameEngine* pge, const std::vector<Vec2f> vecmodelcoordinates, float x, float y, float r, float s, olc::Pixel p)
+{
+	std::vector<Vec2f> vecTransformedCoordinates;
+	int verts = vecmodelcoordinates.size();
+	vecTransformedCoordinates.resize(verts);
+
+	for (int i = 0; i < verts; i++)
+	{
+		vecTransformedCoordinates[i].x = vecmodelcoordinates[i].x * cosf(r) - vecmodelcoordinates[i].y * sinf(r);
+		vecTransformedCoordinates[i].y = vecmodelcoordinates[i].x * sinf(r) + vecmodelcoordinates[i].y * cosf(r);
+	}
+
+	for (int i = 0; i < verts; i++)
+	{
+		vecTransformedCoordinates[i].x = vecTransformedCoordinates[i].x * s;
+		vecTransformedCoordinates[i].y = vecTransformedCoordinates[i].y * s;
+	}
+
+	for (int i = 0; i < verts; i++)
+	{
+		vecTransformedCoordinates[i].x = vecTransformedCoordinates[i].x + x;
+		vecTransformedCoordinates[i].y = vecTransformedCoordinates[i].y + y;
+	}
+
+	for (int i = 0; i < verts + 1; i++)
+	{
+		int j = (i + 1);
+		pge->DrawLine(vecTransformedCoordinates[i % verts].x, vecTransformedCoordinates[i % verts].y,
+			vecTransformedCoordinates[j % verts].x, vecTransformedCoordinates[j % verts].y, p);
+	}
+
+}
+
 

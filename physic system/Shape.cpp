@@ -37,6 +37,11 @@ float CircleShape::GetMomentOfInertia() const
 	return 0.5f * ( radius * radius);
 }
 
+void CircleShape::UpdateVertices(float angle, const Vec2f& position)
+{
+	return;
+}
+
 PolygonShape::PolygonShape(const std::vector<Vec2f> vertices)
 {
 	for (auto vertex : vertices)
@@ -113,20 +118,18 @@ float PolygonShape::GetMomentOfInertia() const
 	return 5000;
 }
 
-void PolygonShape::UpdateVertices(float angle, const Vec2f& position, int index)
+
+
+void PolygonShape::UpdateVertices(float angle, const Vec2f& position)
 {
 	for (int i = 0; i < localvertices.size(); i++)
 	{
-		Vec2f zero = { 0,0 };
+
 		worldvertices[i] = localvertices[i].Rotate(angle);
-		if (index == bodyindex)
-		{
-			worldvertices[i] = localvertices[i] + offsetverts[i];
-		}
-		
-		
+
+
 		worldvertices[i] += position;
-		
+
 	}
 }
 
@@ -144,11 +147,11 @@ BoxShape::BoxShape(float width, float height)
 	worldvertices.push_back(Vec2f(+width / 2.0f, -height / 2.0f));
 	worldvertices.push_back(Vec2f(+width / 2.0f, +height / 2.0f));
 	worldvertices.push_back(Vec2f(-width / 2.0f, +height / 2.0f));
-	offsetverts.push_back(Vec2f(0,0));
-	offsetverts.push_back(Vec2f(0,0));
-	offsetverts.push_back(Vec2f(0,0));
-	offsetverts.push_back(Vec2f(0,0));
-
+	
+	offsetverts.push_back(Vec2f(0.0f,0.0f));
+	offsetverts.push_back(Vec2f(0.0f, 0.0f));
+	offsetverts.push_back(Vec2f(0.0f, 0.0f));
+	offsetverts.push_back(Vec2f(0.0f, 0.0f));
 	
 }
 
@@ -170,3 +173,4 @@ float BoxShape::GetMomentOfInertia() const
 {
 	return (0.083333) * (width * width + height * height);
 }
+

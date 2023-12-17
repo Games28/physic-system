@@ -22,6 +22,8 @@ struct Graphics
    
     static Vec2f GetQuadCenterPoint(std::array<Vec2f, 4>& vertices);
     
+
+     static void DraweWireFrameModel(olc::PixelGameEngine* pge, const std::vector<Vec2f> vecmodelcoordinates, float x, float y, float r, float s, olc::Pixel p);
 };
 
 
